@@ -169,6 +169,18 @@ def build_pdf(data):
 def generate():
     try:
         data = request.get_json(force=True)
+        # If data is a string, parse it as JSON
+        if isinstance(data, str):
+            import re
+            # Strip markdown code fences if present
+            clean = re.sub(r"```json|```", "", data).strip()
+            data = json.loads(clean)
+        # If data is a dict with a 'choices' key it's a raw OpenAI response
+        if isinstance(data, dict) and "choices" in data:
+            content = data["choices"][0]["message"]["content"]
+            import re
+            clean = re.sub(r"```json|```", "", content).strip()
+            data = json.loads(clean)
         pdf_buffer = build_pdf(data)
         return send_file(
             pdf_buffer,
